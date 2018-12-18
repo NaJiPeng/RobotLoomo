@@ -1,6 +1,5 @@
 package com.njp.robotloomo.manager
 
-import android.util.Log
 import java.net.DatagramPacket
 import java.net.InetAddress
 import java.net.MulticastSocket
@@ -24,8 +23,11 @@ class BroadcastSenderThread : Thread() {
         }
         while (true) {
             if (ready) {
-                multicastSocket.send(datagramPacket)
-                Log.i("mmmm","send")
+                try {
+                    multicastSocket.send(datagramPacket)
+                } catch (e: Exception) {
+                    //DO NOTHING
+                }
                 Thread.sleep(mInterval)
             }
         }

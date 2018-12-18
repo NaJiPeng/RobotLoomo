@@ -6,8 +6,8 @@ import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
 import android.content.Context
-import com.njp.robotloomo.event.BaseEvent
-import com.njp.robotloomo.event.EmojiEvent
+import android.util.Log
+import com.njp.robotloomo.event.*
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.baseconnectivity.Message
 import com.segway.robot.sdk.baseconnectivity.MessageConnection
@@ -21,8 +21,10 @@ import io.reactivex.ObservableOnSubscribe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 
-class RobotConnectionManager(private val context: Context) : LifecycleObserver {
+class RobotConnectionManager(context: Context) : LifecycleObserver {
     private var mIsBindSuccess = false
     private val bindStateListener = object : ServiceBinder.BindStateListener {
         override fun onBind() {
@@ -85,12 +87,14 @@ class RobotConnectionManager(private val context: Context) : LifecycleObserver {
     init {
         messageRouter = RobotMessageRouter.getInstance()
         messageRouter.bindService(context, bindStateListener)
+        EventBus.getDefault().register(this)
+
     }
 
     @SuppressLint("CheckResult")
-    fun send(message: Message<*>, listener: MessageSendListener) {
+    fun send(message: Message<*>, listener: ((Boolean) -> Unit)? = null) {
         if (!isConnect) {
-            listener.onMessageSentFail("device not connected")
+            listener?.invoke(false)
             return
         }
         Observable.create(ObservableOnSubscribe<Int> {
@@ -100,10 +104,10 @@ class RobotConnectionManager(private val context: Context) : LifecycleObserver {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         {
-                            listener.onMessageSentSuccess()
+                            listener?.invoke(true)
                         },
                         {
-                            listener.onMessageSentFail(it.message)
+                            listener?.invoke(false)
                         }
                 )
         messageConnection?.sendMessage(message)
@@ -126,22 +130,13 @@ class RobotConnectionManager(private val context: Context) : LifecycleObserver {
                 }
     }
 
-    interface MessageSendListener {
-        fun onMessageSentFail(error: String?)
-        fun onMessageSentSuccess()
-
-    }
-
-    interface MessageReceiveListener {
-        fun onMessageReceived(message: Message<*>?)
-
-    }
-
-
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun unBind() {
         if (mIsBindSuccess) {
             messageRouter.unbindService()
+        }
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this)
         }
     }
 
@@ -183,8 +178,17 @@ class RobotConnectionManager(private val context: Context) : LifecycleObserver {
                             else -> BehaviorList.IDEA_BEHAVIOR_RANDOM
                         }))
                     }
-                    "base" -> {
-                        EventBus.getDefault().post(BaseEvent(messages[1].toFloat(), messages[2].toFloat()))
+                    "base_raw" -> {
+                        EventBus.getDefault().post(BaseRawEvent(messages[1].toFloat(), messages[2].toFloat()))
+                    }
+                    "base_clear" -> {
+                        EventBus.getDefault().post(BaseClearEvent())
+                    }
+                    "base_add" -> {
+                        EventBus.getDefault().post(BaseAddEvent(messages[1]))
+                    }
+                    "base_get" -> {
+                        EventBus.getDefault().post(BaseGetEvent())
                     }
 
                     else -> {
@@ -196,6 +200,12 @@ class RobotConnectionManager(private val context: Context) : LifecycleObserver {
 
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    fun onSendEvent(event: SendEvent) {
+        Log.i("mmmm", "messagesending")
+        send(event.data)
     }
 
 

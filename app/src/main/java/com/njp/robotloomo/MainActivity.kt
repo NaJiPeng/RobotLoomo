@@ -22,14 +22,6 @@ class MainActivity : AppCompatActivity() {
 
         initManager()
 
-        mConnectionManager.setConnectStateListener {
-            if (it) {
-                mSenderThread.notReady()
-            } else {
-                mSenderThread.beReady()
-            }
-        }
-
         mSenderThread.start()
     }
 
