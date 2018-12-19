@@ -88,7 +88,6 @@ class RobotConnectionManager(context: Context) : LifecycleObserver {
         messageRouter = RobotMessageRouter.getInstance()
         messageRouter.bindService(context, bindStateListener)
         EventBus.getDefault().register(this)
-
     }
 
     @SuppressLint("CheckResult")
@@ -179,18 +178,20 @@ class RobotConnectionManager(context: Context) : LifecycleObserver {
                         }))
                     }
                     "base_raw" -> {
-                        EventBus.getDefault().post(BaseRawEvent(messages[1].toFloat(), messages[2].toFloat()))
+                        EventBus.getDefault().post(BaseEvent.BaseRawEvent(messages[1].toFloat(), messages[2].toFloat()))
                     }
                     "base_clear" -> {
-                        EventBus.getDefault().post(BaseClearEvent())
+                        EventBus.getDefault().post(BaseEvent.BaseClearEvent())
                     }
                     "base_add" -> {
-                        EventBus.getDefault().post(BaseAddEvent(messages[1]))
+                        EventBus.getDefault().post(BaseEvent.BaseAddEvent(messages[1]))
                     }
                     "base_get" -> {
-                        EventBus.getDefault().post(BaseGetEvent())
+                        EventBus.getDefault().post(BaseEvent.BaseGetEvent())
                     }
-
+                    "base_point" -> {
+                        EventBus.getDefault().post(BaseEvent.BasePointEvent(messages[1].toInt()))
+                    }
                     else -> {
 
                     }
@@ -204,7 +205,7 @@ class RobotConnectionManager(context: Context) : LifecycleObserver {
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     fun onSendEvent(event: SendEvent) {
-        Log.i("mmmm", "messagesending")
+        Log.i("mmmm","send")
         send(event.data)
     }
 

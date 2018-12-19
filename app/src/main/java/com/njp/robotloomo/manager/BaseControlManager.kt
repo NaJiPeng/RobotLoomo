@@ -15,6 +15,7 @@ import com.segway.robot.sdk.locomotion.sbv.Base.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.lang.StringBuilder
 
 class BaseControlManager(context: Context) : BaseControlHandler, LifecycleObserver {
 
@@ -74,51 +75,50 @@ class BaseControlManager(context: Context) : BaseControlHandler, LifecycleObserv
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onRawEvent(event: BaseRawEvent) {
-        if (mBase.controlMode != CONTROL_MODE_RAW) {
-            mBase.controlMode = CONTROL_MODE_RAW
-        }
-        setLinearVelocity(event.linearVelocity)
-        setAngularVelocity(event.angularVelocity)
-    }
-
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onClearPointEvent(event: BaseClearEvent) {
-        Log.i("mmmm", "onClearPointEvent")
-        mBase.cleanOriginalPoint()
-        mPoints.clear()
-        if (mIsBindSuccess) {
-            mBase.setOriginalPoint(mBase.getOdometryPose(-1))
-        }
-    }
-
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onGetEvent(event: BaseGetEvent) {
-        Log.i("mmmm", "onGetEvent")
-        EventBus.getDefault().post(SendEvent(StringMessage(StringBuffer("points:").apply {
-            mPoints.forEachIndexed { i, pair ->
-                append("$i-${pair.first},")
+    fun onBaseEvent(event: BaseEvent) {
+        when (event) {
+            is BaseEvent.BaseRawEvent -> {
+                Log.i("mmmm", "BaseRawEvent")
+                if (mBase.controlMode != CONTROL_MODE_RAW) {
+                    mBase.controlMode = CONTROL_MODE_RAW
+                }
+                setLinearVelocity(event.linearVelocity)
+                setAngularVelocity(event.angularVelocity)
             }
-        }.deleteCharAt(-1).toString())))
-    }
+            is BaseEvent.BaseClearEvent -> {
+                Log.i("mmmm", "BaseClearEvent")
+                mPoints.clear()
+                if (mIsBindSuccess) {
+                    mBase.cleanOriginalPoint()
+                    mBase.setOriginalPoint(mBase.getOdometryPose(-1))
+                }
+            }
+            is BaseEvent.BaseGetEvent -> {
+                Log.i("mmmm", "BaseGetEvent")
+                EventBus.getDefault().post(SendEvent(StringMessage(
+                        StringBuilder("points:").apply {
+                            append(mPoints.mapIndexed { index, pair ->
+                                "$index-${pair.first}"
+                            }.joinToString(","))
+                        }.toString()
+                )))
+            }
+            is BaseEvent.BaseAddEvent -> {
+                Log.i("mmmm", "BaseAddEvent")
+                mPoints.add(event.name to mBase.getOdometryPose(-1))
+            }
+            is BaseEvent.BasePointEvent -> {
+                Log.i("mmmm", "BasePointEvent")
+                if (mBase.controlMode != CONTROL_MODE_NAVIGATION) {
+                    mBase.controlMode = CONTROL_MODE_NAVIGATION
+                }
+                if (mIsBindSuccess) {
+                    val point = mPoints[event.id].second
+                    mBase.addCheckPoint(point.x, point.y, point.theta)
+                }
+            }
 
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onAddEvent(event: BaseAddEvent) {
-        Log.i("mmmm", "onAddPointEvent:${event.name}")
-        mPoints.add(event.name to mBase.getOdometryPose(-1))
-    }
-
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onPointEvent(event: BasePointEvent) {
-        Log.i("mmmm", "onPointEvent:${event.id}")
-        if (mBase.controlMode != CONTROL_MODE_NAVIGATION) {
-            mBase.controlMode = CONTROL_MODE_NAVIGATION
         }
-        if (mIsBindSuccess) {
-            val point = mPoints[event.id].second
-            mBase.addCheckPoint(point.x, point.y)
-        }
     }
-
 
 }
