@@ -7,7 +7,7 @@ import java.net.MulticastSocket
 /**
  * 发送IP广播的类
  */
-class BroadcastSenderThread : Thread() {
+object BroadcastSenderThread : Thread() {
 
     private var ready = true
     private val mHost = "239.0.0.1"

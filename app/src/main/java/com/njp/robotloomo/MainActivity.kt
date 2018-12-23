@@ -9,12 +9,6 @@ import com.njp.robotloomo.manager.*
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
-    private lateinit var mBaseControlManager: BaseControlManager
-    private lateinit var mHeadControlManager: HeadControlManager
-    private lateinit var mSpeakControlManager: SpeakControlManager
-    private lateinit var mEmojiControlManager: EmojiControlManager
-    private lateinit var mConnectionManager: RobotConnectionManager
-    private lateinit var mSenderThread: BroadcastSenderThread
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,29 +16,34 @@ class MainActivity : AppCompatActivity() {
 
         initManager()
 
-        mSenderThread.start()
+        BroadcastSenderThread.start()
     }
 
 
     private fun initManager() {
-        mSenderThread = BroadcastSenderThread()
-        mBaseControlManager = BaseControlManager(this)
-        mHeadControlManager = HeadControlManager(this)
-        mSpeakControlManager = SpeakControlManager(this)
-        mEmojiControlManager = EmojiControlManager(
-                mBinding.emojiView,
-                mBaseControlManager,
-                mHeadControlManager,
-                mSpeakControlManager
-        )
-        mConnectionManager = RobotConnectionManager(this)
+        BaseManager.init(this)
+        HeadManager.init(this)
+        SpeakManager.init(this)
+        EmojiManager.init(mBinding.emojiView)
+        VisionManager.init(this)
+        RecognizerManager.init(this)
+        SensorManager.init(this)
+        ConnectionManager.init(this)
+    }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unBindManager()
+    }
 
-        lifecycle.addObserver(mBaseControlManager)
-        lifecycle.addObserver(mHeadControlManager)
-        lifecycle.addObserver(mSpeakControlManager)
-        lifecycle.addObserver(mEmojiControlManager)
-        lifecycle.addObserver(mConnectionManager)
+    private fun unBindManager() {
+        BaseManager.unbind()
+        HeadManager.unbind()
+        ConnectionManager.unbind()
+        SpeakManager.unbind()
+        VisionManager.unbind()
+        RecognizerManager.unbind()
+        SensorManager.unbind()
     }
 
 }

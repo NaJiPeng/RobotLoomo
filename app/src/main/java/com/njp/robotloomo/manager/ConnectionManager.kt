@@ -2,29 +2,23 @@ package com.njp.robotloomo.manager
 
 import android.annotation.SuppressLint
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
 import android.content.Context
-import android.util.Log
-import com.njp.robotloomo.event.*
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.baseconnectivity.Message
 import com.segway.robot.sdk.baseconnectivity.MessageConnection
 import com.segway.robot.sdk.connectivity.RobotException
 import com.segway.robot.sdk.connectivity.RobotMessageRouter
 import com.segway.robot.sdk.connectivity.StringMessage
-import com.segway.robot.sdk.emoji.configure.BehaviorList
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.ObservableOnSubscribe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 
-class RobotConnectionManager(context: Context) : LifecycleObserver {
+/**
+ * 连接
+ */
+object ConnectionManager {
     private var mIsBindSuccess = false
     private val bindStateListener = object : ServiceBinder.BindStateListener {
         override fun onBind() {
@@ -82,12 +76,11 @@ class RobotConnectionManager(context: Context) : LifecycleObserver {
     private var connectionStateListener: ObservableEmitter<Boolean>? = null
     private val messageSendListeners = HashMap<Int, ObservableEmitter<Int>>()
 
-    private val messageRouter: RobotMessageRouter
+    @SuppressLint("StaticFieldLeak")
+    private val messageRouter = RobotMessageRouter.getInstance()
 
-    init {
-        messageRouter = RobotMessageRouter.getInstance()
+    fun init(context:Context) {
         messageRouter.bindService(context, bindStateListener)
-        EventBus.getDefault().register(this)
     }
 
     @SuppressLint("CheckResult")
@@ -129,13 +122,9 @@ class RobotConnectionManager(context: Context) : LifecycleObserver {
                 }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun unBind() {
+    fun unbind() {
         if (mIsBindSuccess) {
             messageRouter.unbindService()
-        }
-        if (EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().unregister(this)
         }
     }
 
@@ -148,49 +137,19 @@ class RobotConnectionManager(context: Context) : LifecycleObserver {
                 val messages = message.content.split(":")
                 when (messages[0]) {
                     "emoji" -> {
-                        EventBus.getDefault().post(EmojiEvent(when (messages[1]) {
-                            "IDEA_BEHAVIOR_RANDOM" -> BehaviorList.IDEA_BEHAVIOR_RANDOM
-                            "LOOK_AROUND" -> BehaviorList.LOOK_AROUND
-                            "LOOK_COMFORT" -> BehaviorList.LOOK_COMFORT
-                            "LOOK_CURIOUS" -> BehaviorList.LOOK_CURIOUS
-                            "LOOK_NO_NO" -> BehaviorList.LOOK_NO_NO
-                            "PHONE_CONNECT_SUCCESS" -> BehaviorList.PHONE_CONNECT_SUCCESS
-                            "PHONE_CONNECT_FAIL" -> BehaviorList.PHONE_CONNECT_FAIL
-                            "ROBOT_WAKE_UP" -> BehaviorList.ROBOT_WAKE_UP
-                            "LOOK_UP" -> BehaviorList.LOOK_UP
-                            "LOOK_DOWN" -> BehaviorList.LOOK_DOWN
-                            "LOOK_LEFT" -> BehaviorList.LOOK_LEFT
-                            "LOOK_RIGHT" -> BehaviorList.LOOK_RIGHT
-                            "TURN_LEFT" -> BehaviorList.TURN_LEFT
-                            "TURN_RIGHT" -> BehaviorList.TURN_RIGHT
-                            "TURN_AROUND" -> BehaviorList.TURN_AROUND
-                            "TURN_FULL" -> BehaviorList.TURN_FULL
-                            "APPLE_WOW_EMOTION" -> BehaviorList.APPLE_WOW_EMOTION
-                            "APPLE_LIKE_EMOTION" -> BehaviorList.APPLE_LIKE_EMOTION
-                            "APPLE_LOVE_EMOTION" -> BehaviorList.APPLE_LOVE_EMOTION
-                            "APPLE_LOSE_EMOTION" -> BehaviorList.APPLE_LOSE_EMOTION
-                            "APPLE_HALO_EMOTION" -> BehaviorList.APPLE_HALO_EMOTION
-                            "AVATAR_HELLO_EMOTION" -> BehaviorList.AVATAR_HELLO_EMOTION
-                            "AVATAR_CURIOUS_EMOTION" -> BehaviorList.AVATAR_CURIOUS_EMOTION
-                            "AVATAR_BLINK_EMOTION" -> BehaviorList.AVATAR_BLINK_EMOTION
-                            "TTS_TEST" -> BehaviorList.TTS_TEST
-                            else -> BehaviorList.IDEA_BEHAVIOR_RANDOM
-                        }))
+
                     }
                     "base_raw" -> {
-                        EventBus.getDefault().post(BaseEvent.BaseRawEvent(messages[1].toFloat(), messages[2].toFloat()))
+                        BaseManager.setVelocity(messages[1].toFloat(),messages[2].toFloat())
                     }
                     "base_clear" -> {
-                        EventBus.getDefault().post(BaseEvent.BaseClearEvent())
                     }
                     "base_add" -> {
-                        EventBus.getDefault().post(BaseEvent.BaseAddEvent(messages[1]))
                     }
                     "base_get" -> {
-                        EventBus.getDefault().post(BaseEvent.BaseGetEvent())
                     }
                     "base_point" -> {
-                        EventBus.getDefault().post(BaseEvent.BasePointEvent(messages[1].toInt()))
+
                     }
                     else -> {
 
@@ -203,11 +162,6 @@ class RobotConnectionManager(context: Context) : LifecycleObserver {
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onSendEvent(event: SendEvent) {
-        Log.i("mmmm","send")
-        send(event.data)
-    }
 
 
 }

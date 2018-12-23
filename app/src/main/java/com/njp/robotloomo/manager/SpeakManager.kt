@@ -1,8 +1,5 @@
 package com.njp.robotloomo.manager
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
 import android.content.Context
 
 import com.segway.robot.sdk.base.bind.ServiceBinder
@@ -10,10 +7,12 @@ import com.segway.robot.sdk.emoji.TtsSpeakHnalder
 import com.segway.robot.sdk.voice.Speaker
 import com.segway.robot.sdk.voice.tts.TtsListener
 
-class SpeakControlManager(context: Context) : TtsSpeakHnalder, LifecycleObserver {
+/**
+ * 扬声器
+ */
+object SpeakManager : TtsSpeakHnalder {
 
-
-    private val mSpeaker: Speaker
+    private val mSpeaker = Speaker.getInstance()
     private var mIsBindSuccess = false
 
     private val listener = object : ServiceBinder.BindStateListener {
@@ -27,8 +26,7 @@ class SpeakControlManager(context: Context) : TtsSpeakHnalder, LifecycleObserver
 
     }
 
-    init {
-        mSpeaker = Speaker.getInstance()
+    fun init(context: Context) {
         mSpeaker.bindService(context, listener)
     }
 
@@ -56,7 +54,6 @@ class SpeakControlManager(context: Context) : TtsSpeakHnalder, LifecycleObserver
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun unbind() {
         if (mIsBindSuccess) {
             mSpeaker.unbindService()

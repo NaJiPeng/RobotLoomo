@@ -1,15 +1,15 @@
 package com.njp.robotloomo.manager
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
 import android.content.Context
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.emoji.HeadControlHandler
 import com.segway.robot.sdk.locomotion.head.Head
 
-class HeadControlManager(context: Context) : HeadControlHandler,LifecycleObserver {
-    private val mHead: Head
+/**
+ * 头部
+ */
+object HeadManager : HeadControlHandler {
+    private val mHead = Head.getInstance()
     private var mIsBindSuccess = false
 
     private val mBindStateListener = object : ServiceBinder.BindStateListener {
@@ -24,8 +24,7 @@ class HeadControlManager(context: Context) : HeadControlHandler,LifecycleObserve
         }
     }
 
-    init {
-        mHead = Head.getInstance()
+    fun init(context: Context) {
         mHead.bindService(context.applicationContext, mBindStateListener)
     }
 
@@ -65,8 +64,7 @@ class HeadControlManager(context: Context) : HeadControlHandler,LifecycleObserve
         } else 0f
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun unbind(){
+    fun unbind() {
         if (mIsBindSuccess) {
             mHead.unbindService()
         }
