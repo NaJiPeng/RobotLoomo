@@ -1,6 +1,7 @@
 package com.njp.robotloomo.manager
 
 import java.net.DatagramPacket
+import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.MulticastSocket
 
@@ -10,12 +11,12 @@ import java.net.MulticastSocket
 object BroadcastSenderThread : Thread() {
 
     private var ready = true
-    private val mHost = "239.0.0.1"
+    private val mHost = "255.255.255.255"
     private val mPort = 10001
     private val mInterval = 1000L
 
     override fun run() {
-        val multicastSocket = MulticastSocket()
+        val multicastSocket = DatagramSocket()
         val buffer = "I am loomo".toByteArray()
         val datagramPacket = DatagramPacket(buffer, buffer.size).apply {
             address = InetAddress.getByName(mHost)

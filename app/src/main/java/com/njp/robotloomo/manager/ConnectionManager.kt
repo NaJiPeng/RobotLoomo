@@ -3,6 +3,7 @@ package com.njp.robotloomo.manager
 import android.annotation.SuppressLint
 
 import android.content.Context
+import android.util.Log
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.baseconnectivity.Message
 import com.segway.robot.sdk.baseconnectivity.MessageConnection
@@ -33,6 +34,7 @@ object ConnectionManager {
                             }
 
                             override fun onClosed(error: String?) {
+                                Log.i("onClosed", error)
                                 connectionStateListener?.onNext(false)
                                 isConnect = false
                             }
@@ -54,7 +56,22 @@ object ConnectionManager {
 
                             override fun onMessageReceived(message: Message<*>?) {
                                 message?.let {
-                                    distributeEvent(it)
+                                    when (it) {
+                                        is StringMessage -> {
+                                            val data = it.content.split("@")
+                                            when (data[0]) {
+                                                "mode" -> {
+                                                    modeReceiver
+                                                }
+                                                else -> {
+                                                    contentReceiver
+                                                }
+                                            }?.onNext(data[1])
+                                        }
+                                        else -> {
+
+                                        }
+                                    }
                                 }
                             }
                         })
@@ -74,13 +91,39 @@ object ConnectionManager {
     private var messageConnection: MessageConnection? = null
     private var isConnect = false
     private var connectionStateListener: ObservableEmitter<Boolean>? = null
+    private var modeReceiver: ObservableEmitter<String>? = null
+    private var contentReceiver: ObservableEmitter<String>? = null
     private val messageSendListeners = HashMap<Int, ObservableEmitter<Int>>()
 
     @SuppressLint("StaticFieldLeak")
     private val messageRouter = RobotMessageRouter.getInstance()
 
-    fun init(context:Context) {
+    fun init(context: Context) {
         messageRouter.bindService(context, bindStateListener)
+    }
+
+    @SuppressLint("CheckResult")
+    fun setModeReceiver(receiver: (String) -> Unit) {
+        Observable.create(ObservableOnSubscribe<String> {
+            modeReceiver = it
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    receiver.invoke(it)
+                }
+    }
+
+    @SuppressLint("CheckResult")
+    fun setContentReciver(receiver: (String) -> Unit) {
+        Observable.create(ObservableOnSubscribe<String> {
+            contentReceiver = it
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    receiver.invoke(it)
+                }
     }
 
     @SuppressLint("CheckResult")
@@ -127,41 +170,6 @@ object ConnectionManager {
             messageRouter.unbindService()
         }
     }
-
-    /**
-     * 事件分发
-     */
-    private fun distributeEvent(message: Message<*>) {
-        when (message) {
-            is StringMessage -> {
-                val messages = message.content.split(":")
-                when (messages[0]) {
-                    "emoji" -> {
-
-                    }
-                    "base_raw" -> {
-                        BaseManager.setVelocity(messages[1].toFloat(),messages[2].toFloat())
-                    }
-                    "base_clear" -> {
-                    }
-                    "base_add" -> {
-                    }
-                    "base_get" -> {
-                    }
-                    "base_point" -> {
-
-                    }
-                    else -> {
-
-                    }
-                }
-            }
-            else -> {
-
-            }
-        }
-    }
-
 
 
 }

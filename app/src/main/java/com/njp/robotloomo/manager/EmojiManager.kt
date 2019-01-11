@@ -33,7 +33,7 @@ object EmojiManager{
         emoji.setTtsSpeakHnalder(SpeakManager)
     }
 
-    private fun start(behavior: Int) {
+    fun start(behavior: Int) {
         emoji.startAnimation(
                 RobotAnimatorFactory.getReadyRobotAnimator(behavior),
                 listener

@@ -5,10 +5,15 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.njp.robotloomo.databinding.ActivityMainBinding
 import com.njp.robotloomo.manager.*
+import com.segway.robot.sdk.connectivity.StringMessage
 
+/**
+ * 主程序
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
+    private var mode = "control"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -16,9 +21,51 @@ class MainActivity : AppCompatActivity() {
 
         initManager()
 
+        ConnectionManager.setModeReceiver {
+            when (it) {
+                "control" -> {
+                    startControlMode()
+                }
+                "chat" -> {
+                    startChatMode()
+                }
+            }
+
+        }
+
         BroadcastSenderThread.start()
     }
 
+    private fun startChatMode() {
+
+    }
+
+    private fun startControlMode() {
+        ConnectionManager.setContentReciver {
+            val data = it.split(":")
+                    when (data[0]) {
+                        "base_raw" -> {
+                            BaseManager.setVelocity(data[1].toFloat(), data[2].toFloat())
+                        }
+                        "base_clear" -> {
+                            BaseManager.clear()
+                        }
+                        "base_add" -> {
+                            BaseManager.add(data[1])
+                        }
+                        "base_get" -> {
+                            ConnectionManager.send(StringMessage(BaseManager.getPoints()))
+                        }
+                        "base_point" -> {
+                            BaseManager.navigate(data[1].toInt())
+                        }
+                        "speak_content" -> {
+                            RecognizerManager.recognize()
+                            SpeakManager.startSpeak(data[1])
+                        }
+                    }
+        }
+    }
 
     private fun initManager() {
         BaseManager.init(this)
@@ -26,24 +73,21 @@ class MainActivity : AppCompatActivity() {
         SpeakManager.init(this)
         EmojiManager.init(mBinding.emojiView)
         VisionManager.init(this)
-        RecognizerManager.init(this)
         SensorManager.init(this)
         ConnectionManager.init(this)
+        RecognizerManager.init(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unBindManager()
-    }
-
-    private fun unBindManager() {
+        BroadcastSenderThread.stop()
         BaseManager.unbind()
         HeadManager.unbind()
         ConnectionManager.unbind()
         SpeakManager.unbind()
         VisionManager.unbind()
-        RecognizerManager.unbind()
         SensorManager.unbind()
+        RecognizerManager.unbind()
     }
 
 }

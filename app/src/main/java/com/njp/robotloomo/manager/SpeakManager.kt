@@ -13,6 +13,7 @@ import com.segway.robot.sdk.voice.tts.TtsListener
 object SpeakManager : TtsSpeakHnalder {
 
     private val mSpeaker = Speaker.getInstance()
+    private var mIsSpeaking = false
     private var mIsBindSuccess = false
 
     private val listener = object : ServiceBinder.BindStateListener {
@@ -31,16 +32,19 @@ object SpeakManager : TtsSpeakHnalder {
     }
 
     override fun startSpeak(tts: String?) {
-        if (mIsBindSuccess) {
+        if (mIsBindSuccess && !mIsSpeaking) {
             tts?.let {
                 mSpeaker.speak(tts, object : TtsListener {
                     override fun onSpeechError(word: String?, reason: String?) {
+                        mIsSpeaking = false
                     }
 
                     override fun onSpeechStarted(word: String?) {
+                        mIsSpeaking = true
                     }
 
                     override fun onSpeechFinished(word: String?) {
+                        mIsSpeaking = false
                     }
 
                 })
@@ -51,6 +55,7 @@ object SpeakManager : TtsSpeakHnalder {
     override fun stopSpeak() {
         if (mIsBindSuccess) {
             mSpeaker.stopSpeak()
+            mIsSpeaking = false
         }
     }
 
