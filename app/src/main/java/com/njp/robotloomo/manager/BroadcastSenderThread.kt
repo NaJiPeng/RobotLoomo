@@ -22,14 +22,16 @@ object BroadcastSenderThread : Thread() {
             address = InetAddress.getByName(mHost)
             port = mPort
         }
-        while (true) {
+        while (!isInterrupted) {
             if (ready) {
                 try {
                     multicastSocket.send(datagramPacket)
+                    Thread.sleep(mInterval)
+                } catch (e: InterruptedException) {
+                    break
                 } catch (e: Exception) {
                     //DO NOTHING
                 }
-                Thread.sleep(mInterval)
             }
         }
     }

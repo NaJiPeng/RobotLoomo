@@ -58,7 +58,7 @@ object ConnectionManager {
                                 message?.let {
                                     when (it) {
                                         is StringMessage -> {
-                                            val data = it.content.split("@")
+                                            val data = it.content.split("|")
                                             when (data[0]) {
                                                 "mode" -> {
                                                     modeReceiver

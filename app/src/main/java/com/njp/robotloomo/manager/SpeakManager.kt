@@ -52,6 +52,32 @@ object SpeakManager : TtsSpeakHnalder {
         }
     }
 
+    /**
+     * 结束回调
+     */
+    fun speak(content: String, listener: () -> Unit) {
+        if (mIsBindSuccess && !mIsSpeaking) {
+            mSpeaker.speak(content,object : TtsListener {
+                override fun onSpeechError(word: String?, reason: String?) {
+                    mIsSpeaking = false
+                    listener.invoke()
+                }
+
+                override fun onSpeechStarted(word: String?) {
+                    mIsSpeaking = true
+                }
+
+                override fun onSpeechFinished(word: String?) {
+                    mIsSpeaking = false
+                    listener.invoke()
+                }
+
+            })
+        } else {
+            listener.invoke()
+        }
+    }
+
     override fun stopSpeak() {
         if (mIsBindSuccess) {
             mSpeaker.stopSpeak()

@@ -13,7 +13,6 @@ import com.segway.robot.sdk.connectivity.StringMessage
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
-    private var mode = "control"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,34 +35,39 @@ class MainActivity : AppCompatActivity() {
         BroadcastSenderThread.start()
     }
 
+    /**
+     * 对话模式
+     */
     private fun startChatMode() {
-
+        RecognizerManager.startWakeUp()
     }
 
+    /**
+     * 遥控模式
+     */
     private fun startControlMode() {
         ConnectionManager.setContentReciver {
             val data = it.split(":")
-                    when (data[0]) {
-                        "base_raw" -> {
-                            BaseManager.setVelocity(data[1].toFloat(), data[2].toFloat())
-                        }
-                        "base_clear" -> {
-                            BaseManager.clear()
-                        }
-                        "base_add" -> {
-                            BaseManager.add(data[1])
-                        }
-                        "base_get" -> {
-                            ConnectionManager.send(StringMessage(BaseManager.getPoints()))
-                        }
-                        "base_point" -> {
-                            BaseManager.navigate(data[1].toInt())
-                        }
-                        "speak_content" -> {
-                            RecognizerManager.recognize()
-                            SpeakManager.startSpeak(data[1])
-                        }
-                    }
+            when (data[0]) {
+                "base_raw" -> {
+                    BaseManager.setVelocity(data[1].toFloat(), data[2].toFloat())
+                }
+                "base_clear" -> {
+                    BaseManager.clear()
+                }
+                "base_add" -> {
+                    BaseManager.add(data[1])
+                }
+                "base_get" -> {
+                    ConnectionManager.send(StringMessage(BaseManager.getPoints()))
+                }
+                "base_point" -> {
+                    BaseManager.navigate(data[1].toInt())
+                }
+                "speak_content" -> {
+                    SpeakManager.startSpeak(data[1])
+                }
+            }
         }
     }
 
@@ -80,7 +84,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        BroadcastSenderThread.stop()
+        BroadcastSenderThread.interrupt()
         BaseManager.unbind()
         HeadManager.unbind()
         ConnectionManager.unbind()
