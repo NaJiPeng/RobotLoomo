@@ -8,6 +8,7 @@ import com.iflytek.cloud.*
 import com.njp.robotloomo.network.NetworkManager
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.connectivity.StringMessage
+import com.segway.robot.sdk.emoji.configure.BehaviorList
 import com.segway.robot.sdk.voice.Recognizer
 import com.segway.robot.sdk.voice.recognition.WakeupListener
 import com.segway.robot.sdk.voice.recognition.WakeupResult
@@ -38,6 +39,7 @@ object RecognizerManager {
         override fun onWakeupResult(wakeupResult: WakeupResult?) {
             Log.i("mmmm", "onWakeupResult")
             mCounter = 0
+            EmojiManager.start(BehaviorList.APPLE_LIKE_EMOTION)
             recognize()
         }
 
@@ -61,8 +63,8 @@ object RecognizerManager {
             Log.i("mmmm", "onResult:${p0?.resultString}")
             mRecognizer.stopBeamFormingListen()
             if (!p0?.resultString.isNullOrEmpty()) {
-                ConnectionManager.send(StringMessage("man:$p0"))
-                send(p0!!)
+                ConnectionManager.send(StringMessage("man:${p0?.resultString}"))
+                send(p0!!.resultString)
             }
         }
 
@@ -85,7 +87,7 @@ object RecognizerManager {
             Log.i("mmmm", "onError:${p0?.errorCode}-${p0?.errorDescription}")
             mRecognizer.stopBeamFormingListen()
             mCounter++
-            if (mCounter < 3) {
+            if (mCounter < 5) {
                 recognize()
             } else {
                 startWakeUp()
@@ -95,14 +97,15 @@ object RecognizerManager {
     }
 
     @SuppressLint("CheckResult")
-    fun send(content: RecognizerResult) {
+    fun send(content: String) {
         mRecognizer.stopBeamFormingListen()
-        NetworkManager.send(content.resultString)
+        NetworkManager.send(content)
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         {
                             Log.i("mmmm", "onnext")
                             val text = it.results[0].values.text
+                            ConnectionManager.send(StringMessage("robot:$text"))
                             SpeakManager.speak(text) {
                                 recognize()
                             }
@@ -132,7 +135,7 @@ object RecognizerManager {
             mIat.setParameter(SpeechConstant.RESULT_TYPE, "plain")
             mIat.setParameter(SpeechConstant.LANGUAGE, "zh_cn")
             mIat.setParameter(SpeechConstant.ACCENT, "mandarin")
-            mIat.setParameter(SpeechConstant.VAD_BOS, "4000")
+            mIat.setParameter(SpeechConstant.VAD_BOS, "5000")
             mIat.setParameter(SpeechConstant.VAD_EOS, "1000")
             mIat.setParameter(SpeechConstant.ASR_PTT, "0")
         }

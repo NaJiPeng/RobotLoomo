@@ -6,6 +6,10 @@ import android.os.Bundle
 import com.njp.robotloomo.databinding.ActivityMainBinding
 import com.njp.robotloomo.manager.*
 import com.segway.robot.sdk.connectivity.StringMessage
+import com.segway.robot.sdk.emoji.Emoji
+import com.segway.robot.sdk.emoji.configure.BehaviorList
+import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.Exception
 
 /**
  * 主程序
@@ -32,7 +36,12 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        emoji_view.setOnClickListener {
+            ConnectionManager.send(StringMessage("robot:hello"))
+        }
+
         BroadcastSenderThread.start()
+
     }
 
     /**
@@ -40,6 +49,14 @@ class MainActivity : AppCompatActivity() {
      */
     private fun startChatMode() {
         RecognizerManager.startWakeUp()
+        ConnectionManager.setContentReciver {
+            val data = it.split(":")
+            when (data[0]) {
+                "chat" -> {
+                    RecognizerManager.send(data[1])
+                }
+            }
+        }
     }
 
     /**
