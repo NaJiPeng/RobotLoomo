@@ -1,6 +1,7 @@
 package com.njp.robotloomo.manager
 
 import android.content.Context
+import android.util.Log
 
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.emoji.TtsSpeakHnalder
@@ -13,7 +14,6 @@ import com.segway.robot.sdk.voice.tts.TtsListener
 object SpeakManager : TtsSpeakHnalder {
 
     private val mSpeaker = Speaker.getInstance()
-    private var mIsSpeaking = false
     private var mIsBindSuccess = false
 
     private val listener = object : ServiceBinder.BindStateListener {
@@ -32,19 +32,17 @@ object SpeakManager : TtsSpeakHnalder {
     }
 
     override fun startSpeak(tts: String?) {
-        if (mIsBindSuccess && !mIsSpeaking) {
+        if (mIsBindSuccess) {
             tts?.let {
+                mSpeaker.stopSpeak()
                 mSpeaker.speak(tts, object : TtsListener {
                     override fun onSpeechError(word: String?, reason: String?) {
-                        mIsSpeaking = false
                     }
 
                     override fun onSpeechStarted(word: String?) {
-                        mIsSpeaking = true
                     }
 
                     override fun onSpeechFinished(word: String?) {
-                        mIsSpeaking = false
                     }
 
                 })
@@ -55,33 +53,30 @@ object SpeakManager : TtsSpeakHnalder {
     /**
      * 结束回调
      */
-    fun speak(content: String, listener: () -> Unit) {
-        if (mIsBindSuccess && !mIsSpeaking) {
-            mSpeaker.speak(content,object : TtsListener {
+    fun speak(content: String, listener: (() -> Unit)? = null) {
+        if (mIsBindSuccess) {
+            mSpeaker.stopSpeak()
+            mSpeaker.speak(content, object : TtsListener {
                 override fun onSpeechError(word: String?, reason: String?) {
-                    mIsSpeaking = false
-                    listener.invoke()
+                    listener?.invoke()
                 }
 
                 override fun onSpeechStarted(word: String?) {
-                    mIsSpeaking = true
                 }
 
                 override fun onSpeechFinished(word: String?) {
-                    mIsSpeaking = false
-                    listener.invoke()
+                    listener?.invoke()
                 }
 
             })
         } else {
-            listener.invoke()
+            listener?.invoke()
         }
     }
 
     override fun stopSpeak() {
         if (mIsBindSuccess) {
             mSpeaker.stopSpeak()
-            mIsSpeaking = false
         }
     }
 

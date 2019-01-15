@@ -64,6 +64,16 @@ object HeadManager : HeadControlHandler {
         } else 0f
     }
 
+    fun setVelocity(pv: Float, yv: Float) {
+        if (mIsBindSuccess) {
+            if (mode != Head.MODE_ORIENTATION_LOCK) {
+                mHead.mode = Head.MODE_ORIENTATION_LOCK
+            }
+            mHead.setPitchAngularVelocity(pv)
+            mHead.setYawAngularVelocity(yv)
+        }
+    }
+
     fun unbind() {
         if (mIsBindSuccess) {
             mHead.unbindService()

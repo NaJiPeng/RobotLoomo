@@ -90,7 +90,7 @@ object RecognizerManager {
             if (mCounter < 5) {
                 recognize()
             } else {
-                startWakeUp()
+                start()
             }
         }
 
@@ -142,14 +142,15 @@ object RecognizerManager {
 
     }
 
-    fun startWakeUp() {
+    fun start() {
         if (mBindSuccess) {
             mRecognizer.stopBeamFormingListen()
             mRecognizer.startWakeupMode(mWakeupListener)
+            EmojiManager.start(BehaviorList.ROBOT_WAKE_UP)
         }
     }
 
-    fun stopWakeUp() {
+    fun stop() {
         if (mBindSuccess) {
             mRecognizer.stopBeamFormingListen()
         }

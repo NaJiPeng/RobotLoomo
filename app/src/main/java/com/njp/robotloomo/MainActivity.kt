@@ -3,13 +3,13 @@ package com.njp.robotloomo
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.njp.robotloomo.databinding.ActivityMainBinding
 import com.njp.robotloomo.manager.*
 import com.segway.robot.sdk.connectivity.StringMessage
-import com.segway.robot.sdk.emoji.Emoji
-import com.segway.robot.sdk.emoji.configure.BehaviorList
+import com.segway.robot.sdk.locomotion.head.Head
+import com.segway.robot.sdk.locomotion.sbv.Base
 import kotlinx.android.synthetic.main.activity_main.*
-import java.lang.Exception
 
 /**
  * 主程序
@@ -32,6 +32,9 @@ class MainActivity : AppCompatActivity() {
                 "chat" -> {
                     startChatMode()
                 }
+                "patrol" -> {
+                    startPatrolMode()
+                }
             }
 
         }
@@ -45,10 +48,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * 路径巡逻模式
+     */
+    private fun startPatrolMode() {
+        RecognizerManager.stop()
+        HeadManager.mode = Head.MODE_SMOOTH_TACKING
+        BaseManager.setMode(Base.CONTROL_MODE_NAVIGATION)
+        BaseManager.sendPoints()
+        BaseManager.openBarrier()
+        ConnectionManager.setContentReciver {
+            val data = it.split(":")
+            when (data[0]) {
+                "base_nav" -> {
+                    BaseManager.nav(data[1].toInt())
+                }
+            }
+        }
+    }
+
+    /**
      * 对话模式
      */
     private fun startChatMode() {
-        RecognizerManager.startWakeUp()
+        RecognizerManager.start()
+        HeadManager.mode = 0
         ConnectionManager.setContentReciver {
             val data = it.split(":")
             when (data[0]) {
@@ -63,26 +86,26 @@ class MainActivity : AppCompatActivity() {
      * 遥控模式
      */
     private fun startControlMode() {
+        RecognizerManager.stop()
+        HeadManager.mode = Head.MODE_ORIENTATION_LOCK
         ConnectionManager.setContentReciver {
             val data = it.split(":")
             when (data[0]) {
-                "base_raw" -> {
+                "base_velocity" -> {
                     BaseManager.setVelocity(data[1].toFloat(), data[2].toFloat())
                 }
-                "base_clear" -> {
-                    BaseManager.clear()
+                "head_velocity" -> {
+                    HeadManager.setVelocity(data[1].toFloat(), data[2].toFloat())
+                }
+                "base_reset" -> {
+                    BaseManager.reset()
                 }
                 "base_add" -> {
                     BaseManager.add(data[1])
                 }
-                "base_get" -> {
-                    ConnectionManager.send(StringMessage(BaseManager.getPoints()))
-                }
-                "base_point" -> {
-                    BaseManager.navigate(data[1].toInt())
-                }
-                "speak_content" -> {
-                    SpeakManager.startSpeak(data[1])
+                "speak" -> {
+                    Log.i("mmmm", it)
+                    SpeakManager.speak(data[1])
                 }
             }
         }
