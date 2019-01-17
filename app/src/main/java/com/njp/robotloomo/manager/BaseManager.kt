@@ -3,6 +3,9 @@ package com.njp.robotloomo.manager
 import android.content.Context
 import com.google.gson.Gson
 import com.njp.robotloomo.bean.Coor2D
+import com.segway.robot.algo.Pose2D
+import com.segway.robot.algo.minicontroller.CheckPoint
+import com.segway.robot.algo.minicontroller.CheckPointStateListener
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.connectivity.StringMessage
 import com.segway.robot.sdk.emoji.BaseControlHandler
@@ -58,6 +61,9 @@ object BaseManager : BaseControlHandler {
 
     fun setMode(mode: Int) {
         if (mIsBindSuccess) {
+            if (mode != Base.CONTROL_MODE_NAVIGATION) {
+                mBase.clearCheckPointsAndStop()
+            }
             mBase.controlMode = mode
         }
     }
@@ -86,12 +92,32 @@ object BaseManager : BaseControlHandler {
         mPoints.add(Coor2D(mPoints.size, name, point.x - mStartPoint.x, point.y - mStartPoint.y))
     }
 
-    fun nav(id: Int) {
+    fun patrol(id: List<Int>, loop: Boolean) {
         if (mIsBindSuccess) {
             if (mBase.controlMode != Base.CONTROL_MODE_NAVIGATION) {
                 mBase.controlMode = Base.CONTROL_MODE_NAVIGATION
             }
-            mBase.addCheckPoint(mPoints[id].x, mPoints[id].y)
+            id.forEach {
+                val point = mPoints[it]
+                mBase.addCheckPoint(point.x, point.y)
+            }
+            mBase.setOnCheckPointArrivedListener(object : CheckPointStateListener {
+                override fun onCheckPointMiss(checkPoint: CheckPoint?, realPose: Pose2D?, isLast: Boolean, reason: Int) {
+//                    if (isLast && loop){
+//
+//                    }
+                }
+
+                override fun onCheckPointArrived(checkPoint: CheckPoint?, realPose: Pose2D?, isLast: Boolean) {
+                    if (isLast && loop) {
+                        id.asReversed().forEach {
+                            val point = mPoints[it]
+                            mBase.addCheckPoint(point.x, point.y)
+                        }
+                    }
+                }
+
+            })
         }
     }
 

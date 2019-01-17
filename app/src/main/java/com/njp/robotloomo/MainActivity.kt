@@ -59,8 +59,8 @@ class MainActivity : AppCompatActivity() {
         ConnectionManager.setContentReciver {
             val data = it.split(":")
             when (data[0]) {
-                "base_nav" -> {
-                    BaseManager.nav(data[1].toInt())
+                "base_patrol" -> {
+                    BaseManager.patrol(data[1].split(",").map { it.toInt() }, data[2].toBoolean())
                 }
             }
         }
@@ -88,6 +88,7 @@ class MainActivity : AppCompatActivity() {
     private fun startControlMode() {
         RecognizerManager.stop()
         HeadManager.mode = Head.MODE_ORIENTATION_LOCK
+        HeadManager.worldYaw = 0f
         ConnectionManager.setContentReciver {
             val data = it.split(":")
             when (data[0]) {
