@@ -61,12 +61,13 @@ object BaseManager : BaseControlHandler {
 
     fun setMode(mode: Int) {
         if (mIsBindSuccess) {
-            if (mode != Base.CONTROL_MODE_NAVIGATION) {
+            mBase.controlMode = mode
+            if (mode == Base.CONTROL_MODE_NAVIGATION) {
                 mBase.clearCheckPointsAndStop()
             }
-            mBase.controlMode = mode
         }
     }
+
 
     fun reset() {
         if (mIsBindSuccess) {

@@ -4,6 +4,11 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
+
+assert file(project.ext.ASSET_DIR + "/graph.lite").exists()
+assert file(project.ext.ASSET_DIR + "/labels.txt").exists()
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -13,6 +18,9 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    lintOptions {
+        abortOnError false
     }
     buildTypes {
         release {
@@ -24,6 +32,10 @@ android {
         main {
             jniLibs.srcDirs = ['jniLibs']
         }
+    }
+    aaptOptions {
+        noCompress "tflite"
+        noCompress "lite"
     }
     dataBinding {
         enabled = true

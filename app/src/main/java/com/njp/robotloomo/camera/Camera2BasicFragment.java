@@ -247,24 +247,6 @@ public class Camera2BasicFragment extends Fragment
             };
 
     /**
-     * Shows a {@link Toast} on the UI thread for the classification results.
-     *
-     * @param text The message to show
-     */
-    private void showToast(final String text) {
-        final Activity activity = getActivity();
-        if (activity != null) {
-            activity.runOnUiThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-//                            Log.i("mmmm", text);
-                        }
-                    });
-        }
-    }
-
-    /**
      * Resizes image.
      * <p>
      * Attempting to use too large a preview size could  exceed the camera bus' bandwidth limitation,
@@ -593,7 +575,7 @@ public class Camera2BasicFragment extends Fragment
         backgroundHandler = new Handler(backgroundThread.getLooper());
         synchronized (lock) {
             runClassifier = false;
-            runSender = true;
+            runSender = false;
 
         }
         backgroundHandler.post(periodicClassify);
@@ -685,7 +667,6 @@ public class Camera2BasicFragment extends Fragment
 
                         @Override
                         public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-                            showToast("Failed");
                         }
                     },
                     null);
@@ -733,15 +714,16 @@ public class Camera2BasicFragment extends Fragment
      */
     private void classifyFrame() {
         if (classifier == null || getActivity() == null || cameraDevice == null) {
-            showToast("Uninitialized Classifier or invalid context.");
+            Log.i("mmmm", "Uninitialized Classifier or invalid context.");
             return;
         }
         Bitmap bitmap =
                 textureView.getBitmap(ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y);
         String textToShow = classifier.classifyFrame(bitmap);
         bitmap.recycle();
-        showToast(textToShow);
+        Log.i("mmmm", textToShow);
     }
+
 
     /**
      * Send a frame to mobile phone from the preview stream.
@@ -765,6 +747,22 @@ public class Camera2BasicFragment extends Fragment
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean isRunClassifier() {
+        return runClassifier;
+    }
+
+    public void setRunClassifier(boolean runClassifier) {
+        this.runClassifier = runClassifier;
+    }
+
+    public boolean isRunSender() {
+        return runSender;
+    }
+
+    public void setRunSender(boolean runSender) {
+        this.runSender = runSender;
     }
 
     /**

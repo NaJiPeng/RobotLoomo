@@ -64,6 +64,12 @@ object HeadManager : HeadControlHandler {
         } else 0f
     }
 
+    fun setHeadLightMode(mode: Int){
+        if (mIsBindSuccess){
+            mHead.setHeadLightMode(mode)
+        }
+    }
+
     fun setVelocity(pv: Float, yv: Float) {
         if (mIsBindSuccess) {
             if (mode != Head.MODE_ORIENTATION_LOCK) {
