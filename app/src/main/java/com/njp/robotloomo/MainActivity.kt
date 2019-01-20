@@ -4,7 +4,6 @@ import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import com.njp.robotloomo.camera.Camera2BasicFragment
 import com.njp.robotloomo.databinding.ActivityMainBinding
 import com.njp.robotloomo.manager.*
 import com.segway.robot.sdk.connectivity.StringMessage
@@ -18,12 +17,10 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
-    private lateinit var mFragment: Camera2BasicFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        mFragment = fragmentManager.findFragmentById(R.id.fragment) as Camera2BasicFragment
 
         initManager()
 
@@ -54,9 +51,12 @@ class MainActivity : AppCompatActivity() {
      * 路径巡逻模式
      */
     private fun startPatrolMode() {
-        mFragment.isRunSender = false
+        VisionManager.isClassifier = false
+        VisionManager.isSend = false
         RecognizerManager.stop()
         HeadManager.mode = Head.MODE_SMOOTH_TACKING
+        HeadManager.worldPitch = 0f
+        HeadManager.worldYaw = 0f
         BaseManager.setMode(Base.CONTROL_MODE_NAVIGATION)
         BaseManager.sendPoints()
         BaseManager.openBarrier()
@@ -74,7 +74,11 @@ class MainActivity : AppCompatActivity() {
      * 对话模式
      */
     private fun startChatMode() {
-        mFragment.isRunSender = false
+        VisionManager.isClassifier = false
+        VisionManager.isSend = false
+        HeadManager.mode = Head.MODE_SMOOTH_TACKING
+        HeadManager.worldPitch = 0f
+        HeadManager.worldYaw = 0f
         RecognizerManager.start()
         HeadManager.mode = 0
         ConnectionManager.setContentReciver {
@@ -91,10 +95,12 @@ class MainActivity : AppCompatActivity() {
      * 遥控模式
      */
     private fun startControlMode() {
+        VisionManager.isClassifier = false
+        VisionManager.isSend = true
         RecognizerManager.stop()
-        mFragment.isRunSender = true
-//        mFragment.isRunClassifier = true
-        HeadManager.mode = Head.MODE_ORIENTATION_LOCK
+        HeadManager.mode = Head.MODE_SMOOTH_TACKING
+        HeadManager.worldYaw = 0f
+        HeadManager.worldPitch = 0f
 
         ConnectionManager.setContentReciver {
             val data = it.split(":")
@@ -124,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         HeadManager.init(this)
         SpeakManager.init(this)
         EmojiManager.init(mBinding.emojiView)
-        VisionManager.init(this)
+        VisionManager.init(this, mBinding.textureView)
         SensorManager.init(this)
         ConnectionManager.init(this)
         RecognizerManager.init(this)

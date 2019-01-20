@@ -7,11 +7,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <fragment
-            android:id="@+id/fragment"
-            android:name="com.njp.robotloomo.camera.Camera2BasicFragment"
+        <TextureView
+            android:id="@+id/texture_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
+
         <com.segway.robot.sdk.emoji.EmojiView
             android:id="@+id/emoji_view"
             android:layout_width="match_parent"

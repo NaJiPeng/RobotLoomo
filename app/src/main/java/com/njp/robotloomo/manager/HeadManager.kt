@@ -64,19 +64,21 @@ object HeadManager : HeadControlHandler {
         } else 0f
     }
 
-    fun setHeadLightMode(mode: Int){
-        if (mIsBindSuccess){
+    fun setHeadLightMode(mode: Int) {
+        if (mIsBindSuccess) {
             mHead.setHeadLightMode(mode)
         }
     }
 
     fun setVelocity(pv: Float, yv: Float) {
         if (mIsBindSuccess) {
-            if (mode != Head.MODE_ORIENTATION_LOCK) {
-                mHead.mode = Head.MODE_ORIENTATION_LOCK
-            }
-            mHead.setPitchAngularVelocity(pv)
-            mHead.setYawAngularVelocity(yv)
+//            if (mode != Head.MODE_ORIENTATION_LOCK) {
+//                mHead.mode = Head.MODE_ORIENTATION_LOCK
+//            }
+//            mHead.setPitchAngularVelocity(pv)
+//            mHead.setYawAngularVelocity(yv)
+            mHead.setWorldPitch(mHead.worldPitch.angle + pv)
+            mHead.setWorldYaw(mHead.worldYaw.angle + yv)
         }
     }
 

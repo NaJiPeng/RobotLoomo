@@ -1,6 +1,7 @@
 package com.njp.robotloomo.manager
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.njp.robotloomo.bean.Coor2D
 import com.segway.robot.algo.Pose2D
@@ -10,6 +11,7 @@ import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.connectivity.StringMessage
 import com.segway.robot.sdk.emoji.BaseControlHandler
 import com.segway.robot.sdk.locomotion.sbv.Base
+import com.segway.robot.sdk.locomotion.sbv.StartVLSListener
 import kotlin.collections.ArrayList
 
 /**
@@ -64,6 +66,16 @@ object BaseManager : BaseControlHandler {
             mBase.controlMode = mode
             if (mode == Base.CONTROL_MODE_NAVIGATION) {
                 mBase.clearCheckPointsAndStop()
+                mBase.startVLS(true, true, object : StartVLSListener {
+                    override fun onOpened() {
+                        Log.i("mmmm", "onOpened")
+                        mBase.setNavigationDataSource(Base.NAVIGATION_SOURCE_TYPE_VLS)
+                    }
+
+                    override fun onError(errorMessage: String?) {
+                        Log.i("mmmm", "onError:$errorMessage")
+                    }
+                })
             }
         }
     }
