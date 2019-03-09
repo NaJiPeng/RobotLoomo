@@ -110,7 +110,8 @@ object BaseManager : BaseControlHandler {
             if (mBase.controlMode != Base.CONTROL_MODE_NAVIGATION) {
                 mBase.controlMode = Base.CONTROL_MODE_NAVIGATION
             }
-            id.forEach {
+            var list = id
+            list.forEach {
                 val point = mPoints[it]
                 mBase.addCheckPoint(point.x, point.y)
             }
@@ -123,7 +124,8 @@ object BaseManager : BaseControlHandler {
 
                 override fun onCheckPointArrived(checkPoint: CheckPoint?, realPose: Pose2D?, isLast: Boolean) {
                     if (isLast && loop) {
-                        id.asReversed().forEach {
+                        list = list.asReversed()
+                        id.forEach {
                             val point = mPoints[it]
                             mBase.addCheckPoint(point.x, point.y)
                         }

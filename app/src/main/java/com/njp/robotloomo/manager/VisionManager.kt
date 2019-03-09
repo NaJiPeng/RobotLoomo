@@ -12,6 +12,8 @@ import com.segway.robot.algo.dts.DTSPerson
 import com.segway.robot.algo.dts.PersonDetectListener
 import com.segway.robot.sdk.base.bind.ServiceBinder
 import com.segway.robot.sdk.connectivity.BufferMessage
+import com.segway.robot.sdk.connectivity.StringMessage
+import com.segway.robot.sdk.locomotion.sbv.Base
 import com.segway.robot.sdk.vision.DTS
 import com.segway.robot.sdk.vision.Vision
 import java.io.ByteArrayOutputStream
@@ -33,9 +35,9 @@ object VisionManager {
     private val mImageRunnable = Runnable {
         while (true) {
             if (isSend) {
-                var bitmap = mTextureView.getBitmap(480, 640)
+                var bitmap: Bitmap? = mTextureView.getBitmap(480, 640) ?: continue
                 val m = Matrix()
-                m.setRotate(-90f, (bitmap.width / 2).toFloat(), (bitmap.height / 2).toFloat())
+                m.setRotate(-90f, (bitmap!!.width / 2).toFloat(), (bitmap.height / 2).toFloat())
                 m.postScale(-1f, 1f)
                 val bmp2 = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, true)
                 bitmap.recycle()
@@ -59,6 +61,7 @@ object VisionManager {
                 val textToShow = mClassifier.classifyFrame(bitmap)
                 bitmap.recycle()
                 Log.i("mmmm", textToShow)
+                ConnectionManager.send(StringMessage("classify:$textToShow"))
             }
         }
     }
@@ -74,7 +77,6 @@ object VisionManager {
             mDts.setVideoSource(DTS.VideoSource.CAMERA)
             mDts.setPreviewDisplay(Surface(mTextureView.surfaceTexture))
             mDts.start()
-            mDts.startDetectingPerson(mPersonDetectListener)
             Thread(mImageRunnable).start()
             Thread(mClassifierRunnable).start()
         }
@@ -82,19 +84,32 @@ object VisionManager {
     }
     private val mPersonDetectListener = object : PersonDetectListener {
         override fun onPersonDetected(person: Array<out DTSPerson>?) {
-            person?.forEach {
-                Log.i("mmmm", "person:${it.distance}")
-            }
         }
 
         override fun onPersonDetectionError(errorCode: Int, message: String?) {
-            Log.i("mmmm", message)
         }
 
         override fun onPersonDetectionResult(person: Array<out DTSPerson>?) {
-            Log.i("mmmm", "${person?.size}")
+            if (!person.isNullOrEmpty()) {
+                BaseManager.setMode(Base.CONTROL_MODE_RAW)
+                BaseManager.setVelocity(0f, 0f)
+            } else {
+                BaseManager.setMode(Base.CONTROL_MODE_NAVIGATION)
+            }
         }
 
+    }
+
+    fun startDetectingPerson() {
+        mDts?.startDetectingPerson(mPersonDetectListener)
+    }
+
+    fun stopDetectingPerson() {
+        try {
+            mDts?.stopDetectingPerson()
+        } catch (e: Exception) {
+            //Do nothing
+        }
     }
 
 

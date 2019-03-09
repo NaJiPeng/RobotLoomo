@@ -1,9 +1,11 @@
 package com.njp.robotloomo
 
 import android.databinding.DataBindingUtil
+import android.graphics.SurfaceTexture
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.TextureView
 import com.njp.robotloomo.databinding.ActivityMainBinding
 import com.njp.robotloomo.manager.*
 import com.segway.robot.sdk.connectivity.StringMessage
@@ -35,6 +37,9 @@ class MainActivity : AppCompatActivity() {
                 "patrol" -> {
                     startPatrolMode()
                 }
+                "arm"->{
+                    startArmMode()
+                }
             }
 
         }
@@ -48,14 +53,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * 机械手臂模式
+     */
+    private fun startArmMode() {
+        VisionManager.isClassifier = false
+        VisionManager.isSend = false
+        VisionManager.stopDetectingPerson()
+
+        UsbSerialManager.getDevices()
+
+        RecognizerManager.stop()
+        HeadManager.mode = Head.MODE_SMOOTH_TACKING
+        HeadManager.worldPitch = 0.6f
+        HeadManager.worldYaw = 0f
+    }
+
+    /**
      * 路径巡逻模式
      */
     private fun startPatrolMode() {
         VisionManager.isClassifier = false
         VisionManager.isSend = false
+        VisionManager.startDetectingPerson()
+
         RecognizerManager.stop()
         HeadManager.mode = Head.MODE_SMOOTH_TACKING
-        HeadManager.worldPitch = 0f
+        HeadManager.worldPitch = 0.7f
         HeadManager.worldYaw = 0f
         BaseManager.setMode(Base.CONTROL_MODE_NAVIGATION)
         BaseManager.sendPoints()
@@ -76,6 +99,8 @@ class MainActivity : AppCompatActivity() {
     private fun startChatMode() {
         VisionManager.isClassifier = false
         VisionManager.isSend = false
+        VisionManager.stopDetectingPerson()
+
         HeadManager.mode = Head.MODE_SMOOTH_TACKING
         HeadManager.worldPitch = 0f
         HeadManager.worldYaw = 0f
@@ -97,6 +122,8 @@ class MainActivity : AppCompatActivity() {
     private fun startControlMode() {
         VisionManager.isClassifier = false
         VisionManager.isSend = true
+        VisionManager.stopDetectingPerson()
+
         RecognizerManager.stop()
         HeadManager.mode = Head.MODE_SMOOTH_TACKING
         HeadManager.worldYaw = 0f
@@ -118,22 +145,40 @@ class MainActivity : AppCompatActivity() {
                     BaseManager.add(data[1])
                 }
                 "speak" -> {
-                    Log.i("mmmm", it)
                     SpeakManager.speak(data[1])
+                }
+                "classify"->{
+                    VisionManager.isClassifier = data[1].toBoolean()
                 }
             }
         }
     }
 
     private fun initManager() {
+        mBinding.textureView.surfaceTextureListener = object :TextureView.SurfaceTextureListener{
+            override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture?, width: Int, height: Int) {
+            }
+
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture?) {
+            }
+
+            override fun onSurfaceTextureDestroyed(surface: SurfaceTexture?): Boolean {
+                return true
+            }
+
+            override fun onSurfaceTextureAvailable(surface: SurfaceTexture?, width: Int, height: Int) {
+                VisionManager.init(this@MainActivity, mBinding.textureView)
+            }
+
+        }
         BaseManager.init(this)
         HeadManager.init(this)
         SpeakManager.init(this)
         EmojiManager.init(mBinding.emojiView)
-        VisionManager.init(this, mBinding.textureView)
         SensorManager.init(this)
         ConnectionManager.init(this)
         RecognizerManager.init(this)
+        UsbSerialManager.init(this)
     }
 
     override fun onDestroy() {

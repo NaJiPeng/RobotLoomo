@@ -34,7 +34,6 @@ object ConnectionManager {
                             }
 
                             override fun onClosed(error: String?) {
-                                Log.i("onClosed", error)
                                 connectionStateListener?.onNext(false)
                                 isConnect = false
                             }
@@ -109,9 +108,13 @@ object ConnectionManager {
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    receiver.invoke(it)
-                }
+                .subscribe(
+                        {
+                            receiver.invoke(it)
+                        },
+                        {
+                            Log.e("mmmm","error",it)
+                        })
     }
 
     @SuppressLint("CheckResult")
@@ -121,9 +124,13 @@ object ConnectionManager {
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    receiver.invoke(it)
-                }
+                .subscribe(
+                        {
+                            receiver.invoke(it)
+                        },
+                        {
+                            Log.e("mmmm","error",it)
+                        })
     }
 
     @SuppressLint("CheckResult")
