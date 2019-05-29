@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity() {
     private fun startArmMode() {
         VisionManager.isClassifier = false
         VisionManager.isSend = false
-        VisionManager.stopDetectingPerson()
 
         UsbSerialManager.getDevices()
 
@@ -74,7 +73,6 @@ class MainActivity : AppCompatActivity() {
     private fun startPatrolMode() {
         VisionManager.isClassifier = false
         VisionManager.isSend = false
-        VisionManager.startDetectingPerson()
 
         RecognizerManager.stop()
         HeadManager.mode = Head.MODE_SMOOTH_TACKING
@@ -99,7 +97,6 @@ class MainActivity : AppCompatActivity() {
     private fun startChatMode() {
         VisionManager.isClassifier = false
         VisionManager.isSend = false
-        VisionManager.stopDetectingPerson()
 
         HeadManager.mode = Head.MODE_SMOOTH_TACKING
         HeadManager.worldPitch = 0f
@@ -122,7 +119,6 @@ class MainActivity : AppCompatActivity() {
     private fun startControlMode() {
         VisionManager.isClassifier = false
         VisionManager.isSend = true
-        VisionManager.stopDetectingPerson()
 
         RecognizerManager.stop()
         HeadManager.mode = Head.MODE_SMOOTH_TACKING

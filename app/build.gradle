@@ -15,8 +15,8 @@ android {
         applicationId "com.njp.robotloomo"
         minSdkVersion 22
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "2.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     lintOptions {
@@ -74,4 +74,10 @@ dependencies {
 
     implementation files('libs/Msc.jar')
     implementation files('libs/Sunflower.jar')
+
+    implementation 'com.google.firebase:firebase-core:16.0.9'
+    implementation 'com.google.firebase:firebase-ml-vision:20.0.0'
+    implementation 'com.google.firebase:firebase-ml-vision-object-detection-model:16.0.0'
 }
+
+apply plugin: 'com.google.gms.google-services'
